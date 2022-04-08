@@ -240,6 +240,34 @@ func TestWithMessagef(t *testing.T) {
 	}
 }
 
+func TestCode(t *testing.T) {
+	tests := []struct {
+		code       int
+		message    string
+		wantType   string
+		wantCode   int
+		wangString string
+	}{
+		{errConfigurationNotValid, "Configuration error", "*withCode", errConfigurationNotValid, "Configuration error"},
+	}
+
+	for _, tt := range tests {
+		got := Code(tt.code, tt.message)
+		err, ok := got.(*withCode)
+		if !ok {
+			t.Errorf("Codef(%v, %q): error type got: %T, want %s", tt.code, tt.message, got, tt.wantType)
+		}
+
+		if err.code != tt.wantCode {
+			t.Errorf("Codef(%v, %q): got: %v, want %v", tt.code, tt.message, err.code, tt.wantCode)
+		}
+
+		if got.Error() != tt.wangString {
+			t.Errorf("Codef(%v, %q): got: %v, want %v", tt.code, tt.message, got.Error(), tt.wangString)
+		}
+	}
+}
+
 func TestCodef(t *testing.T) {
 	tests := []struct {
 		code       int
@@ -270,6 +298,38 @@ func TestCodef(t *testing.T) {
 	}
 }
 
+func TestWithCode(t *testing.T) {
+	type args struct {
+		err     error
+		code    int
+		message string
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "normal",
+			args: args{
+				err:     New("err"),
+				code:    errEOF,
+				message: "err is nil",
+			},
+		},
+		{
+			name: "err is nil",
+			args: args{
+				err:     nil,
+				code:    errEOF,
+				message: "err is nil",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) { _ = WithCode(tt.args.err, tt.args.code, tt.args.message) })
+	}
+}
+
 func TestWithCodef(t *testing.T) {
 	type args struct {
 		err    error
@@ -281,6 +341,15 @@ func TestWithCodef(t *testing.T) {
 		name string
 		args args
 	}{
+		{
+			name: "normal",
+			args: args{
+				err:    New("err"),
+				code:   errEOF,
+				format: "err %s",
+				args:   []interface{}{"test"},
+			},
+		},
 		{
 			name: "err is nil",
 			args: args{
