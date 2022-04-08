@@ -4,8 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
@@ -57,6 +58,7 @@ type nilError struct{}
 func (nilError) Error() string { return "nil error" }
 
 func TestCause(t *testing.T) {
+	topErr := Codef(errEOF, "topErr")
 	x := New("error")
 	tests := []struct {
 		err  error
@@ -65,44 +67,56 @@ func TestCause(t *testing.T) {
 		// nil error is nil
 		err:  nil,
 		want: nil,
-	}, {
-		// explicit nil error is nil
-		err:  (error)(nil),
-		want: nil,
-	}, {
-		// typed nil is nil
-		err:  (*nilError)(nil),
-		want: (*nilError)(nil),
-	}, {
-		// uncaused error is unaffected
-		err:  io.EOF,
-		want: io.EOF,
-	}, {
-		// caused error returns cause
-		err:  Wrap(io.EOF, "ignored"),
-		want: io.EOF,
-	}, {
-		err:  x, // return from errors.New
-		want: x,
-	}, {
-		WithMessage(nil, "whoops"),
-		nil,
-	}, {
-		WithMessage(io.EOF, "whoops"),
-		io.EOF,
-	}, {
-		WithStack(nil),
-		nil,
-	}, {
-		WithStack(io.EOF),
-		io.EOF,
-	}}
+	},
+		{
+			// explicit nil error is nil
+			err:  (error)(nil),
+			want: nil,
+		},
+		{
+			// typed nil is nil
+			err:  (*nilError)(nil),
+			want: (*nilError)(nil),
+		},
+		{
+			// uncaused error is unaffected
+			err:  io.EOF,
+			want: io.EOF,
+		},
+		{
+			// caused error returns cause
+			err:  Wrap(io.EOF, "ignored"),
+			want: io.EOF,
+		},
+		{
+			err:  x, // return from errors.New
+			want: x,
+		},
+		{
+			WithMessage(nil, "whoops"),
+			nil,
+		},
+		{
+			WithMessage(io.EOF, "whoops"),
+			io.EOF,
+		},
+		{
+			WithCodef(Wrap(topErr, "err2"), errConfigurationNotValid, "err1"),
+			topErr,
+		},
+		{
+			WithStack(nil),
+			nil,
+		},
+		{
+			WithStack(io.EOF),
+			io.EOF,
+		},
+	}
 
 	for i, tt := range tests {
 		got := Cause(tt.err)
-		if !reflect.DeepEqual(got, tt.want) {
-			t.Errorf("test %d: got %#v, want %#v", i+1, got, tt.want)
-		}
+		assert.Equalf(t, got, tt.want, "test %d: got %#v, want %#v", i+1, got, tt.want)
 	}
 }
 
@@ -122,6 +136,7 @@ func TestWrapf(t *testing.T) {
 		{io.EOF, "read error", "read error: EOF"},
 		{Wrapf(io.EOF, "read error without format specifiers"), "client error", "client error: read error without format specifiers: EOF"},
 		{Wrapf(io.EOF, "read error with %d format specifier", 1), "client error", "client error: read error with 1 format specifier: EOF"},
+		{Codef(errEOF, "EOF"), "Codef", "Codef"},
 	}
 
 	for _, tt := range tests {
@@ -163,6 +178,7 @@ func TestWithStack(t *testing.T) {
 	}{
 		{io.EOF, "EOF"},
 		{WithStack(io.EOF), "EOF"},
+		{Codef(errEOF, "EOF"), "EOF"},
 	}
 
 	for _, tt := range tests {
@@ -221,6 +237,64 @@ func TestWithMessagef(t *testing.T) {
 		if got != tt.want {
 			t.Errorf("WithMessage(%v, %q): got: %q, want %q", tt.err, tt.message, got, tt.want)
 		}
+	}
+}
+
+func TestCodef(t *testing.T) {
+	tests := []struct {
+		code       int
+		format     string
+		args       []interface{}
+		wantType   string
+		wantCode   int
+		wangString string
+	}{
+		{errConfigurationNotValid, "Configuration error", nil, "*withCode", errConfigurationNotValid, "Configuration error"},
+		{errConfigurationNotValid, "Configuration %s", []interface{}{"failed"}, "*withCode", errConfigurationNotValid, "Configuration failed"},
+	}
+
+	for _, tt := range tests {
+		got := Codef(tt.code, tt.format, tt.args...)
+		err, ok := got.(*withCode)
+		if !ok {
+			t.Errorf("Codef(%v, %q %q): error type got: %T, want %s", tt.code, tt.format, tt.args, got, tt.wantType)
+		}
+
+		if err.code != tt.wantCode {
+			t.Errorf("Codef(%v, %q %q): got: %v, want %v", tt.code, tt.format, tt.args, err.code, tt.wantCode)
+		}
+
+		if got.Error() != tt.wangString {
+			t.Errorf("Codef(%v, %q %q): got: %v, want %v", tt.code, tt.format, tt.args, got.Error(), tt.wangString)
+		}
+	}
+}
+
+func TestWithCodef(t *testing.T) {
+	type args struct {
+		err    error
+		code   int
+		format string
+		args   []interface{}
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "err is nil",
+			args: args{
+				err:    nil,
+				code:   errEOF,
+				format: "err is nil",
+				args:   nil,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_ = WithCodef(tt.args.err, tt.args.code, tt.args.format, tt.args.args...)
+		})
 	}
 }
 
