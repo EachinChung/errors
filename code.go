@@ -43,7 +43,7 @@ func (coder defaultCoder) String() string {
 	return coder.Ext
 }
 
-// HTTPStatus 返回关联的HTTP状态代码 (如果有)。否则，返回200。
+// HTTPStatus 返回关联的HTTP状态代码 (如果有)。否则, 返回200。
 func (coder defaultCoder) HTTPStatus() int {
 	if coder.HTTP == 0 {
 		return 500
@@ -69,7 +69,7 @@ func Register(coder Coder) {
 }
 
 // MustRegister 注册用户定义错误代码。
-// 当已存在相同的 code 时，会发生 panic
+// 当已存在相同的 code 时, 会发生 panic
 func MustRegister(coder Coder) {
 	if 0 <= coder.Code() && coder.Code() <= 100 {
 		panic("code '0 ~ 100' is the reserved error code of the package `github.com/eachinchung/errors`")
@@ -87,7 +87,7 @@ func MustRegister(coder Coder) {
 
 // ParseCoder 将任何错误解析为 *withCode。
 // nil 错误将直接返回 nil。
-// 没有 withStack 的错误，将被解析为 ErrUnknown.
+// 没有 withStack 的错误, 将被解析为 ErrUnknown.
 func ParseCoder(err error) Coder {
 	if err == nil {
 		return nil

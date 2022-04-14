@@ -8,18 +8,18 @@ import (
 	mapset "github.com/deckarep/golang-set"
 )
 
-// Aggregate 表示包含多个错误的对象，但不一定具有单一的语义含义。
-// Aggregate 可以与 errors.Is() 一起使用，以检查特定错误类型的发生。
-// errors.As() 不支持，因为调用者可能关心与给定类型匹配的潜在多个特定错误。
+// Aggregate 表示包含多个错误的对象, 但不一定具有单一的语义含义。
+// Aggregate 可以与 errors.Is() 一起使用, 以检查特定错误类型的发生。
+// errors.As() 不支持, 因为调用者可能关心与给定类型匹配的潜在多个特定错误。
 type Aggregate interface {
 	error
 	Errors() []error
 	Is(error) bool
 }
 
-// NewAggregate 将 errList 转换为 Aggregate，Aggregate 本身就是 errors 接口的实现。
-// 如果 slice 为空，则返回 nil。
-// 它将检查输入 errList 的任何元素是否为 nil，以避免调用 Error() 时出现 nil panic。
+// NewAggregate 将 errList 转换为 Aggregate, Aggregate 本身就是 errors 接口的实现。
+// 如果 slice 为空, 则返回 nil。
+// 它将检查输入 errList 的任何元素是否为 nil, 以避免调用 Error() 时出现 nil panic。
 func NewAggregate(errList ...error) Aggregate {
 	if len(errList) == 0 {
 		return nil
@@ -103,14 +103,14 @@ func (agg aggregate) visit(f func(err error) bool) bool {
 // Errors 为 Aggregate 的一部分。
 func (agg aggregate) Errors() []error { return agg }
 
-// Matcher 用于匹配 errors。如果 errors 匹配，则返回true。
+// Matcher 用于匹配 errors。如果 errors 匹配, 则返回true。
 type Matcher func(error) bool
 
 // FilterOut 从输入错误中删除与 Matcher 匹配的错误。
-// 如果输入是非 Aggregate error，则仅测试该错误。
-// 如果输入 Aggregate error，错误列表将被递归处理。
+// 如果输入是非 Aggregate error, 则仅测试该错误。
+// 如果输入 Aggregate error, 错误列表将被递归处理。
 //
-// 例如，这可以用于从错误列表中删除已知的错误 (例如 io.EOF 或 os.PathNotFound )。
+// 例如, 这可以用于从错误列表中删除已知的错误 (例如 io.EOF 或 os.PathNotFound )。
 func FilterOut(err error, fns ...Matcher) error {
 	if err == nil {
 		return nil
@@ -124,7 +124,7 @@ func FilterOut(err error, fns ...Matcher) error {
 	return nil
 }
 
-// matchesError 如果有 Matcher 返回 true，则返回 true
+// matchesError 如果有 Matcher 返回 true, 则返回 true
 func matchesError(err error, fns ...Matcher) bool {
 	for _, fn := range fns {
 		if fn(err) {
@@ -134,8 +134,8 @@ func matchesError(err error, fns ...Matcher) bool {
 	return false
 }
 
-// filterErrors 返回所有 fns 返回false 的任何 error (或嵌套错误，如果列表包含嵌套错误)。
-// 如果没有 error，则返回 nil。副作用会使所有嵌套的切片变平
+// filterErrors 返回所有 fns 返回false 的任何 error (或嵌套错误, 如果列表包含嵌套错误)。
+// 如果没有 error, 则返回 nil。副作用会使所有嵌套的切片变平
 func filterErrors(list []error, fns ...Matcher) []error {
 	var result []error
 	for _, err := range list {
@@ -166,4 +166,20 @@ func Flatten(agg Aggregate) Aggregate {
 		}
 	}
 	return NewAggregate(result...)
+}
+
+// AggregateGoroutines 协程 error 收集器, 将所有非 nil error 填充到返回的 Aggregate 中。
+// 如果所有函数均成功完成, 则返回 nil。
+func AggregateGoroutines(funcs ...func() error) Aggregate {
+	errChan := make(chan error, len(funcs))
+	for _, f := range funcs {
+		go func(f func() error) { errChan <- f() }(f)
+	}
+	errs := make([]error, 0)
+	for i := 0; i < cap(errChan); i++ {
+		if err := <-errChan; err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return NewAggregate(errs...)
 }

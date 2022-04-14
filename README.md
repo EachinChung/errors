@@ -1,6 +1,6 @@
 # errors
 
-`errors` 提供简单的错误处理。同时附带错误码映射，与聚合错误切片。
+`errors` 提供简单的错误处理。同时附带错误码映射, 与聚合错误切片。
 
 **[CHANGELOG](CHANGELOG.md)**
 

@@ -302,3 +302,65 @@ func TestFlatten_nil(t *testing.T) {
 		})
 	}
 }
+
+func TestAggregateGoroutines(t *testing.T) {
+	type args struct {
+		funcs []func() error
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "normal",
+			args: args{
+				funcs: []func() error{
+					func() error {
+						return loadConfig()
+					},
+					func() error {
+						return loadConfig()
+					},
+				},
+			},
+			want: NewAggregate(loadConfig(), loadConfig()).Error(),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, AggregateGoroutines(tt.args.funcs...).Error(), "AggregateGoroutines()")
+		})
+	}
+}
+
+func TestAggregateGoroutines_nil(t *testing.T) {
+	type args struct {
+		funcs []func() error
+	}
+	tests := []struct {
+		name string
+		args args
+		want error
+	}{
+		{
+			name: "normal",
+			args: args{
+				funcs: []func() error{
+					func() error {
+						return nil
+					},
+					func() error {
+						return nil
+					},
+				},
+			},
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, AggregateGoroutines(tt.args.funcs...), "AggregateGoroutines()")
+		})
+	}
+}

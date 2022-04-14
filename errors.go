@@ -10,7 +10,7 @@ import (
 )
 
 // New 返回带有消息的 error
-// New 在它被调用的地方，记录堆栈跟踪
+// New 在它被调用的地方, 记录堆栈跟踪
 func New(message string) error {
 	return &fundamental{
 		msg:   message,
@@ -18,8 +18,8 @@ func New(message string) error {
 	}
 }
 
-// Errorf 根据格式说明符进行格式化，并将字符串作为 error 的值返回
-// Errorf 在它被调用的地方，记录堆栈跟踪
+// Errorf 根据格式说明符进行格式化, 并将字符串作为 error 的值返回
+// Errorf 在它被调用的地方, 记录堆栈跟踪
 func Errorf(format string, args ...interface{}) error {
 	return &fundamental{
 		msg:   fmt.Sprintf(format, args...),
@@ -27,8 +27,8 @@ func Errorf(format string, args ...interface{}) error {
 	}
 }
 
-// WithStack 在调用堆栈时，用堆栈跟踪注释 error
-// 如果 err 为 nil，WithStack 返回 nil
+// WithStack 在调用堆栈时, 用堆栈跟踪注释 error
+// 如果 err 为 nil, WithStack 返回 nil
 func WithStack(err error) error {
 	if err == nil {
 		return nil
@@ -46,8 +46,8 @@ func WithStack(err error) error {
 	return &withStack{err, callers()}
 }
 
-// Wrap 返回 error，该错误用 Wrap 堆栈跟踪注释 err，并返回提供错误信息
-// 如果 err 为 nil，则 Wrap 返回 nil
+// Wrap 返回 error, 该错误用 Wrap 堆栈跟踪注释 err, 并返回提供错误信息
+// 如果 err 为 nil, 则 Wrap 返回 nil
 func Wrap(err error, message string) error {
 	if err == nil {
 		return nil
@@ -66,8 +66,8 @@ func Wrap(err error, message string) error {
 	return &withStack{err, callers()}
 }
 
-// Wrapf 返回 error，该错误用 Wrapf 堆栈跟踪注释 err，并返回格式化错误信息
-// 如果 err 为 nil，则 Wrapf 返回 nil
+// Wrapf 返回 error, 该错误用 Wrapf 堆栈跟踪注释 err, 并返回格式化错误信息
+// 如果 err 为 nil, 则 Wrapf 返回 nil
 func Wrapf(err error, format string, args ...interface{}) error {
 	if err == nil {
 		return nil
@@ -93,7 +93,7 @@ func Wrapf(err error, format string, args ...interface{}) error {
 }
 
 // WithMessage 用 message 注释错误
-// 如果 err 为 nil，则 WithMessage 返回 nil
+// 如果 err 为 nil, 则 WithMessage 返回 nil
 func WithMessage(err error, message string) error {
 	if err == nil {
 		return nil
@@ -105,7 +105,7 @@ func WithMessage(err error, message string) error {
 }
 
 // WithMessagef 用格式化的 message 注释错误
-// 如果 err 为 nil，则 WithMessagef 返回 nil
+// 如果 err 为 nil, 则 WithMessagef 返回 nil
 func WithMessagef(err error, format string, args ...interface{}) error {
 	if err == nil {
 		return nil
@@ -116,7 +116,7 @@ func WithMessagef(err error, format string, args ...interface{}) error {
 	}
 }
 
-// Code 用 message 注释错误，同时用错误码映射错误
+// Code 用 message 注释错误, 同时用错误码映射错误
 func Code(code int, message string) error {
 	return &withCode{
 		msg:   message,
@@ -125,7 +125,7 @@ func Code(code int, message string) error {
 	}
 }
 
-// Codef 用格式化的 message 注释错误，同时用错误码映射错误
+// Codef 用格式化的 message 注释错误, 同时用错误码映射错误
 func Codef(code int, format string, args ...interface{}) error {
 	return &withCode{
 		msg:   fmt.Sprintf(format, args...),
@@ -134,9 +134,9 @@ func Codef(code int, format string, args ...interface{}) error {
 	}
 }
 
-// WithCode 返回 error，该错误用 WithCodef 堆栈跟踪注释 err
-// 同时用错误码映射错误，并返回错误信息
-// 如果 err 为 nil，则 WithCodef 返回 nil
+// WithCode 返回 error, 该错误用 WithCodef 堆栈跟踪注释 err
+// 同时用错误码映射错误, 并返回错误信息
+// 如果 err 为 nil, 则 WithCodef 返回 nil
 func WithCode(err error, code int, message string) error {
 	if err == nil {
 		return nil
@@ -150,9 +150,9 @@ func WithCode(err error, code int, message string) error {
 	}
 }
 
-// WithCodef 返回 error，该错误用 WithCodef 堆栈跟踪注释 err
-// 同时用错误码映射错误，并返回格式化错误信息
-// 如果 err 为 nil，则 WithCodef 返回 nil
+// WithCodef 返回 error, 该错误用 WithCodef 堆栈跟踪注释 err
+// 同时用错误码映射错误, 并返回格式化错误信息
+// 如果 err 为 nil, 则 WithCodef 返回 nil
 func WithCodef(err error, code int, format string, args ...interface{}) error {
 	if err == nil {
 		return nil
@@ -166,7 +166,7 @@ func WithCodef(err error, code int, format string, args ...interface{}) error {
 	}
 }
 
-// fundamental 一个错误，它有一个 msg 和 stack，但没有调用者
+// fundamental 一个错误, 它有一个 msg 和 stack, 但没有调用者
 type fundamental struct {
 	msg string
 	*stack
@@ -265,13 +265,13 @@ func (w *withCode) Unwrap() error { return w.cause }
 // Format implements fmt.Formatter. https://golang.org/pkg/fmt/#hdr-Printing
 //
 // Verbs:
-//     %s  -   如果没有指定，则返回映射到错误代码或错误消息的用户安全错误字符串。
+//     %s  -   如果没有指定, 则返回映射到错误代码或错误消息的用户安全错误字符串。
 //     %v      %s 的别名
 //
 // Flags:
-//      #      JSON 格式的输出，用于日志记录
-//      -      输出调用者详细信息，有助于故障排除
-//      +      输出完整的错误堆栈详细信息，对调试有用
+//      #      JSON 格式的输出, 用于日志记录
+//      -      输出调用者详细信息, 有助于故障排除
+//      +      输出完整的错误堆栈详细信息, 对调试有用
 //goland:noinspection GoUnhandledErrorResult
 func (w *withCode) Format(state fmt.State, verb rune) {
 	switch verb {
@@ -321,15 +321,15 @@ func (w *withCode) Format(state fmt.State, verb rune) {
 	}
 }
 
-// Cause 如果可能的话，返回 error 的根本原因
-// 如果实现以下接口，则 error 会返回原因:
+// Cause 如果可能的话, 返回 error 的根本原因
+// 如果实现以下接口, 则 error 会返回原因:
 //
 //     type causer interface {
 //            Cause() error
 //     }
 //
-// 如果 error 没有实现 Cause，则返回原始 error。
-// 如果 error 为 nil，则将返回 nil，而无需进一步调查。
+// 如果 error 没有实现 Cause, 则返回原始 error。
+// 如果 error 为 nil, 则将返回 nil, 而无需进一步调查。
 func Cause(err error) error {
 	type causer interface {
 		Cause() error
